@@ -10,7 +10,7 @@ class SnoozeBox:
     """
     def __init__(self, string):
         self.bstring = string
-        self.name = str(string)
+        self.name = string.decode("utf-8")[7:]
 
         import re
         self.time = re.findall(r'\d+', self.name) [0]
@@ -44,6 +44,39 @@ class IMAPSnoozeDaemon:
         self.boxes = list(map(SnoozeBox, snoozeboxes))
         print(self.boxes)
 
+    def loop(self):
+        while True:
+            for box in self.boxes:
+                self.process(box)
+            import time
+            time.sleep(5)
+
+    def process(self, box):
+        self.markNew(box)
+
+    def markNew(self, box):
+        self.imap.select(box.name)
+        status, data = self.imap.uid('search', None, 'NOT HEADER SNOOZE ".*"')
+        assert(status == "OK")
+        mails = data[0].decode("utf-8").split(" ")
+        toDelete = []
+
+        for mail in mails:
+            status, body = self.imap.uid('fetch', mail, '(RFC822)')
+            assert(status == "OK")
+            body = body[0][1].decode("utf-8")
+            if body.find("X-SNOOZE:") == -1:
+                import time
+                t = int(time.time())
+                t += int(box.time) * 60
+                body = "X-SNOOZE: " + str(t) + "\n" + body
+                toDelete.append(mail)
+                self.imap.append(box.name, None, None, body.encode("utf-8"))
+                res = self.imap.uid('STORE', mail, '+FLAGS', '(\Deleted)')
+
+        a = self.imap.expunge()
+        return
+
 import argparse
 
 parser = argparse.ArgumentParser(description='IMAP snooze daemon.')
@@ -59,3 +92,4 @@ args = parser.parse_args()
 snoozed = IMAPSnoozeDaemon(args.server, args.user, args.password)
 snoozed.connect()
 snoozed.findSnoozeBoxes()
+snoozed.loop()
