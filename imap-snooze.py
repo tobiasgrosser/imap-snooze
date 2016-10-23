@@ -40,7 +40,7 @@ class IMAPSnoozeDaemon:
     def findSnoozeBoxes(self):
         status , mailboxes = self.imap.lsub()
         assert(status == "OK")
-        snoozeboxes = filter(lambda x : str(x).find("pop") != -1, mailboxes)
+        snoozeboxes = filter(lambda x : str(x).find("snooze") != -1, mailboxes)
         self.boxes = list(map(SnoozeBox, snoozeboxes))
         print(self.boxes)
 
@@ -69,7 +69,15 @@ class IMAPSnoozeDaemon:
         for mail in mails:
             status, body = self.imap.uid('fetch', mail, '(RFC822)')
             assert(status == "OK")
-            body = body[0][1].decode("utf-8")
+            keepmail = True
+            try:
+                body = body[0][1].decode("utf-8")
+            except UnicodeDecodeError:
+                print("Problem found")
+                keepmail = False
+                result = self.imap.uid('COPY', mail, 'INBOX')
+                res = self.imap.uid('STORE', mail, '+FLAGS', '(\Deleted)')
+                continue
             if body.find("X-SNOOZE:") == -1:
                 import time
                 t = int(time.time())
@@ -94,7 +102,15 @@ class IMAPSnoozeDaemon:
         for mail in mails:
             status, body = self.imap.uid('fetch', mail, '(RFC822)')
             assert(status == "OK")
-            body = body[0][1].decode("utf-8")
+
+            keepmail = True
+            try:
+                body = body[0][1].decode("utf-8")
+            except UnicodeDecodeError:
+                print("Problem found")
+                keepmail = False
+                continue
+            
             import email.feedparser as parser
             p = parser.FeedParser()
             p.feed(body)
@@ -105,7 +121,7 @@ class IMAPSnoozeDaemon:
                 moveTime = int(re.findall(r'\d+', body) [0])
                 import time
                 currentTime = time.time()
-                if moveTime > currentTime:
+                if moveTime > currentTime and keepmail:
                     remainingTime = moveTime - currentTime
                     remainingSeconds = remainingTime % 60
                     remainingMinutes = remainingTime % (60 * 60)
@@ -117,9 +133,9 @@ class IMAPSnoozeDaemon:
                     remainingHours = remainingHours / (60 * 60)
                     remainingDays = remainingDays / (60 * 60 * 24)
 
-                    print("# Igoring\n\"%s\" from %s" %
-                          (email["Subject"], email["From"]))
-                    print("Time left: %d d, %d h, %d m, %d s" % (remainingDays, remainingHours, remainingMinutes, remainingSeconds))
+                    #print("# Igoring\n\"%s\" from %s" %
+                    #      (email["Subject"], email["From"]))
+                    #print("Time left: %d d, %d h, %d m, %d s" % (remainingDays, remainingHours, remainingMinutes, remainingSeconds))
                     continue
                 body = body[body.find('\n')+1:body.rfind('\n')]
                 self.imap.append("INBOX", None, None, body.encode("utf-8"))
