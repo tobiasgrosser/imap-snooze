@@ -53,13 +53,17 @@ class IMAPSnoozeDaemon:
 
     def process(self, box):
         self.markNew(box)
+        self.moveBack(box)
 
     def markNew(self, box):
         self.imap.select(box.name)
-        status, data = self.imap.uid('search', None, 'NOT HEADER SNOOZE ".*"')
+        status, data = self.imap.uid('search', None, 'ALL')
         assert(status == "OK")
         mails = data[0].decode("utf-8").split(" ")
         toDelete = []
+
+        if mails == ['']:
+            return;
 
         for mail in mails:
             status, body = self.imap.uid('fetch', mail, '(RFC822)')
@@ -68,13 +72,39 @@ class IMAPSnoozeDaemon:
             if body.find("X-SNOOZE:") == -1:
                 import time
                 t = int(time.time())
-                t += int(box.time) * 60
+                t += int(box.time) * 10
                 body = "X-SNOOZE: " + str(t) + "\n" + body
                 toDelete.append(mail)
                 self.imap.append(box.name, None, None, body.encode("utf-8"))
                 res = self.imap.uid('STORE', mail, '+FLAGS', '(\Deleted)')
 
         a = self.imap.expunge()
+        return
+
+    def moveBack(self, box):
+        self.imap.select(box.name)
+        status, data = self.imap.uid('search', None, 'ALL')
+        assert(status == "OK")
+        mails = data[0].decode("utf-8").split(" ")
+        toDelete = []
+        if mails == ['']:
+            return;
+
+        for mail in mails:
+            status, body = self.imap.uid('fetch', mail, '(RFC822)')
+            assert(status == "OK")
+            body = body[0][1].decode("utf-8")
+            if body.find("X-SNOOZE:") != -1:
+                import re
+                moveTime = int(re.findall(r'\d+', body) [0])
+                import time
+                if moveTime > time.time():
+                    continue
+                body = body[body.find('\n')+1:body.rfind('\n')]
+                self.imap.append("INBOX", None, None, body.encode("utf-8"))
+                res = self.imap.uid('STORE', mail, '+FLAGS', '(\Deleted)')
+
+        self.imap.expunge()
         return
 
 import argparse
