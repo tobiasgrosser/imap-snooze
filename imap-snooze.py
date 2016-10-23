@@ -2,6 +2,25 @@
 
 from imaplib import IMAP4_SSL
 
+class SnoozeBox:
+    """
+    A snooze box is an imap folder that contains the string "snooze" and a
+    number that defines the number of days a message in this folder should be
+    snoozed.
+    """
+    def __init__(self, string):
+        self.bstring = string
+        self.name = str(string)
+
+        import re
+        self.time = re.findall(r'\d+', self.name) [0]
+
+    def __str__(self):
+        return "SnoozeBox(\"" + self.name + "\", "+ self.time + ")"
+
+    def __repr__(self):
+        return str(self)
+
 class IMAPSnoozeDaemon:
     """
     A snooze daemon which watches a set of IMAP folders for snooze emails to
@@ -18,6 +37,13 @@ class IMAPSnoozeDaemon:
         self.imap = IMAP4_SSL(self.server)
         self.imap.login(self.user, self.password)
 
+    def findSnoozeBoxes(self):
+        status , mailboxes = self.imap.lsub()
+        assert(status == "OK")
+        snoozeboxes = filter(lambda x : str(x).find("snooze") != -1, mailboxes)
+        self.boxes = list(map(SnoozeBox, snoozeboxes))
+        print(self.boxes)
+
 import argparse
 
 parser = argparse.ArgumentParser(description='IMAP snooze daemon.')
@@ -32,3 +58,4 @@ args = parser.parse_args()
 
 snoozed = IMAPSnoozeDaemon(args.server, args.user, args.password)
 snoozed.connect()
+snoozed.findSnoozeBoxes()
