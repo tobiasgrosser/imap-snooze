@@ -25,4 +25,4 @@ imap-snooze.py --user fastmailusername --password application-password
 
 
 ** Warning: this is beta software. I use it myself, but this is an early
-   prototype, which may have serious bugs"
+   prototype, which may have serious bugs.**
