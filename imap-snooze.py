@@ -153,8 +153,9 @@ class IMAPSnoozeDaemon:
 import argparse
 
 parser = argparse.ArgumentParser(description='IMAP snooze daemon.')
-parser.add_argument('--server', dest='server', required=True,
-                    help='The URL of the imap server to connect to')
+parser.add_argument('--server', dest='server',
+                    help='The URL of the imap server to connect to',
+                    default='imaps-proxy.messagingengine.com')
 parser.add_argument('--user', dest='user', required=True,
                     help='The username to use')
 parser.add_argument('--password', dest='password', required=True,
