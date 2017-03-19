@@ -1,0 +1,24 @@
+# A simple script to add "Snooze" option on fastmail servers
+
+## Prepare your mailbox
+
+Setup mailbox folders named:
+
+	x-snooze-1
+	x-snooze-2
+	x-snooze-3
+	...
+	x-snooze-7
+
+The number in the mailbox specifies for how many days mails should be snoozed.
+
+## Mark an email to be snoozed
+
+By typing "m" and then "x", you can quickly move an email into the snooze
+folder.
+
+## Run imap-snooze.py to ensure emails are moved back to INBOX
+
+Clone this repository and run:
+
+imap-snooze.py --user fastmailusername --password application-password
