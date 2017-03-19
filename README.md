@@ -1,4 +1,4 @@
-# A simple script to add "Snooze" option on fastmail servers
+# Script to add "Snooze" on fastmail servers
 
 ## Prepare your mailbox
 
