@@ -127,7 +127,6 @@ class IMAPSnoozeDaemon:
                 currentTime = time.time()
                 if moveTime > currentTime and keepmail:
                     remainingTime = int(moveTime - currentTime)
-                    print("Hallo")
                     print(remainingTime)
                     remainingSeconds = remainingTime % 60
                     remainingMinutes = remainingTime % (60 * 60)
