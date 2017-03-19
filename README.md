@@ -23,9 +23,9 @@ Clone this repository and run:
 
 imap-snooze.py --user fastmailusername --password application-password
 
-** Warning: only use on machines which you own. Other users on shared machines
-   can often access the command line arguments and can consequently steal your
-   password **
+**Warning: only use on machines which you own. Other users on shared machines
+  can often access the command line arguments and can consequently steal your
+  password.**
 
-** Warning: this is beta software. I use it myself, but this is an early
-   prototype, which may have serious bugs.**
+**Warning: this is beta software. I use it myself, but this is an early
+  prototype, which may have serious bugs.**
